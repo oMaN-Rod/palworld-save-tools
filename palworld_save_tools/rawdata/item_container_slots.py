@@ -21,12 +21,16 @@ def decode_bytes(
         return None
     reader = parent_reader.internal_copy(bytes(c_bytes), debug=False)
     data: dict[str, Any] = {}
-    data["permission"] = {
-        "type_a": reader.tarray(lambda r: r.byte()),
-        "type_b": reader.tarray(lambda r: r.byte()),
-        "item_static_ids": reader.tarray(lambda r: r.fstring()),
+    data: dict[str, Any] = {
+        "permission": {
+            "type_a": reader.u32(),
+            "type_b": reader.u32(),
+            "item_static_id": reader.fstring(),
+        },
+        "corruption_progress_value": reader.float(),
     }
-    data["corruption_progress_value"] = reader.float()
+    unknown_bytes = reader.read_to_end()
+    data["local_id"] = UUID(unknown_bytes[12:28])
     if not reader.eof():
         raise Exception("Warning: EOF not reached")
     return data
@@ -47,11 +51,12 @@ def encode_bytes(p: dict[str, Any]) -> bytes:
     if p is None:
         return bytes()
     writer = FArchiveWriter()
-    writer.tarray(lambda w, d: w.byte(d), p["permission"]["type_a"])
-    writer.tarray(lambda w, d: w.byte(d), p["permission"]["type_b"])
-    writer.tarray(
-        lambda w, d: (w.fstring(d), None)[1], p["permission"]["item_static_ids"]
-    )
+    writer.u32(p["permission"]["type_a"])
+    writer.u32(p["permission"]["type_b"])
+    writer.fstring(p["permission"]["item_static_id"])
     writer.float(p["corruption_progress_value"])
+    writer.write(b"\x00" * 12)
+    uuid_writer(writer, p["local_id"])
+    writer.write(b"\x00" * 16)
     encoded_bytes = writer.bytes()
     return encoded_bytes
