@@ -63,15 +63,16 @@ def decode_bytes(
             "players": [],
         }
         player_count = reader.i32()
-        for _ in range(player_count):
-            player = {
-                "player_uid": reader.guid(),
-                "player_info": {
-                    "last_online_real_time": reader.i64(),
-                    "player_name": reader.fstring(),
-                },
-            }
-            guild["players"].append(player)
+        if player_count < 1000:
+            for _ in range(player_count):
+                player = {
+                    "player_uid": reader.guid(),
+                    "player_info": {
+                        "last_online_real_time": reader.i64(),
+                        "player_name": reader.fstring(),
+                    },
+                }
+                guild["players"].append(player)
         group_data |= guild
         remaining_data = reader.read_to_end()
         if remaining_data:
