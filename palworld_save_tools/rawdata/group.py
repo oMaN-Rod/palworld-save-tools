@@ -59,20 +59,20 @@ def decode_bytes(
         group_data |= indie
     if group_type == "EPalGroupType::Guild":
         guild = {
+            "unknown_bytes": reader.byte_list(16),
             "admin_player_uid": reader.guid(),
             "players": [],
         }
         player_count = reader.i32()
-        if player_count < 1000:
-            for _ in range(player_count):
-                player = {
-                    "player_uid": reader.guid(),
-                    "player_info": {
-                        "last_online_real_time": reader.i64(),
-                        "player_name": reader.fstring(),
-                    },
-                }
-                guild["players"].append(player)
+        for _ in range(player_count):
+            player = {
+                "player_uid": reader.guid(),
+                "player_info": {
+                    "last_online_real_time": reader.i64(),
+                    "player_name": reader.fstring(),
+                },
+            }
+            guild["players"].append(player)
         group_data |= guild
         remaining_data = reader.read_to_end()
         if remaining_data:
@@ -120,6 +120,7 @@ def encode_bytes(p: dict[str, Any]) -> bytes:
         writer.i64(p["player_info"]["last_online_real_time"])
         writer.fstring(p["player_info"]["player_name"])
     if p["group_type"] == "EPalGroupType::Guild":
+        writer.write(bytes(p["unknown_bytes"]))
         writer.guid(p["admin_player_uid"])
         writer.i32(len(p["players"]))
         for i in range(len(p["players"])):
