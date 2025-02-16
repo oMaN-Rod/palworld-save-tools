@@ -118,7 +118,7 @@ PALWORLD_CUSTOM_PROPERTIES: dict[
 # List of properties that are not working with newer versions
 DISABLED_PROPERTIES = {
     ".worldSaveData.BaseCampSaveData.Value.ModuleMap",
-    ".worldSaveData.MapObjectSaveData",
+    # ".worldSaveData.MapObjectSaveData",
     # Broken in v0.3.7 - memory optimisation, UObject fields encoded into raw data
     # Parsing behaviour can be controlled with CustomVersionData
     ".worldSaveData.ItemContainerSaveData.Value.Slots.Slots.RawData",

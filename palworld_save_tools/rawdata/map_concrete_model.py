@@ -25,6 +25,8 @@ MAP_OBJECT_NAME_TO_CONCRETE_MODEL_CLASS: dict[str, str] = {
     "damagablerock0004": "PalMapObjectItemDropOnDamagModel",
     "damagablerock0005": "PalMapObjectItemDropOnDamagModel",
     "damagablerock0017": "PalMapObjectItemDropOnDamagModel",
+    "damagablerock0018": "PalMapObjectItemDropOnDamagModel",
+    "damagablerock0019": "PalMapObjectItemDropOnDamagModel",
     "damagablerock0006": "PalMapObjectItemDropOnDamagModel",
     "damagablerock0007": "PalMapObjectItemDropOnDamagModel",
     "damagablerock0008": "PalMapObjectItemDropOnDamagModel",
@@ -60,11 +62,15 @@ MAP_OBJECT_NAME_TO_CONCRETE_MODEL_CLASS: dict[str, str] = {
     "farmblockv2_tomato": "PalMapObjectFarmBlockV2Model",
     "farmblockv2_lettuce": "PalMapObjectFarmBlockV2Model",
     "farmblockv2_berries": "PalMapObjectFarmBlockV2Model",
+    "farmblockv2_potato": "PalMapObjectFarmBlockV2Model",
+    "farmblockv2_onion": "PalMapObjectFarmBlockV2Model",
+    "farmblockv2_carrot": "PalMapObjectFarmBlockV2Model",
     "fasttravelpoint": "PalMapObjectFastTravelPointModel",
     "hightechkitchen": "PalMapObjectConvertItemModel",
     "itemchest": "PalMapObjectItemChestModel",
     "itemchest_02": "PalMapObjectItemChestModel",
     "itemchest_03": "PalMapObjectItemChestModel",
+    "itemchest_04": "PalMapObjectItemChestModel",
     "dev_itemchest": "PalMapObjectItemChestModel",
     "medicalpalbed": "PalMapObjectMedicalPalBedModel",
     "medicalpalbed_02": "PalMapObjectMedicalPalBedModel",
@@ -321,6 +327,9 @@ MAP_OBJECT_NAME_TO_CONCRETE_MODEL_CLASS: dict[str, str] = {
     "treasurebox_electric": "PalMapObjectTreasureBoxModel",
     "treasurebox_ivy": "PalMapObjectTreasureBoxModel",
     "treasurebox_ice": "PalMapObjectTreasureBoxModel",
+    "treasurebox_fire": "PalMapObjectTreasureBoxModel",
+    "treasurebox_water": "PalMapObjectTreasureBoxModel",
+    "treasurebox_requiredlonghold": "PalMapObjectTreasureBoxModel",
 }
 NO_OP_TYPES = set(
     [
@@ -328,7 +337,7 @@ NO_OP_TYPES = set(
         "PalBuildObject",
         "PalMapObjectRankUpCharacterModel",
         "PalMapObjectDefenseWaitModel",
-        "PalMapObjectItemChestModel",
+        # "PalMapObjectItemChestModel",
         "PalMapObjectMedicalPalBedModel",
         "PalMapObjectPalFoodBoxModel",
         "PalMapObjectPlayerBedModel",
@@ -339,7 +348,7 @@ NO_OP_TYPES = set(
         "PalMapObjectRepairItemModel",
         "PalMapObjectBaseCampPassiveEffectModel",
         "PalMapObjectBaseCampPassiveWorkHardModel",
-        "PalMapObjectItemChest_AffectCorruption",
+        # "PalMapObjectItemChest_AffectCorruption",
         "PalMapObjectDamagedScarecrowModel",
         "PalMapObjectBaseCampWorkerDirectorModel",
         "PalMapObjectMonsterFarmModel",
@@ -398,6 +407,8 @@ def decode_bytes(
         }
     elif map_object_concrete_model == "PalMapObjectItemDropOnDamagModel":
         data["drop_item_infos"] = reader.tarray(pal_item_and_num_read)
+        if not reader.eof():
+            data["unknown_bytes"] = [int(b) for b in reader.read_to_end()]
     elif map_object_concrete_model == "PalMapObjectDeathPenaltyStorageModel":
         data["owner_player_uid"] = reader.guid()
         if not reader.eof():
@@ -438,12 +449,19 @@ def decode_bytes(
         data["spawned_egg_instance_ids"] = reader.tarray(lambda r: r.guid())
     elif map_object_concrete_model == "PalMapObjectSignboardModel":
         data["signboard_text"] = reader.fstring()
+        if not reader.eof():
+            data["unknown_bytes"] = [int(b) for b in reader.read_to_end()]
     elif map_object_concrete_model == "PalMapObjectTorchModel":
         data["extinction_date_time"] = reader.i64()
     elif map_object_concrete_model == "PalMapObjectPalEggModel":
         data["unknown_bytes"] = reader.u32()
     elif map_object_concrete_model == "PalMapObjectBaseCampPoint":
         data["base_camp_id"] = reader.guid()
+    elif (
+        map_object_concrete_model == "PalMapObjectItemChest_AffectCorruption"
+        or map_object_concrete_model == "PalMapObjectItemChestModel"
+    ) and not reader.eof():
+        data["unknown_bytes"] = [int(b) for b in reader.read_to_end()]
     else:
         print(
             f"Warning: Unknown map object concrete model {map_object_concrete_model}, skipping"
@@ -533,6 +551,12 @@ def encode_bytes(p: Optional[dict[str, Any]]) -> bytes:
         writer.u32(p["unknown_bytes"])
     elif map_object_concrete_model == "PalMapObjectBaseCampPoint":
         writer.guid(p["base_camp_id"])
+    elif (
+        map_object_concrete_model == "PalMapObjectItemChest_AffectCorruption"
+        or map_object_concrete_model == "PalMapObjectItemChestModel"
+    ):
+        if "unknown_data" in p:
+            writer.write(bytes(p["unknown_data"]))
     else:
         raise Exception(
             f"Unknown map object concrete model {map_object_concrete_model}"
