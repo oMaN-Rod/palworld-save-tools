@@ -2,6 +2,7 @@ from typing import Any, Optional, Sequence
 from palworld_save_tools.archive import FArchiveReader, FArchiveWriter
 from palworld_save_tools.rawdata.common import (
     lab_research_rep_info_read,
+    lab_research_rep_info_writer,
 )
 
 
@@ -42,7 +43,7 @@ def encode_bytes(p: Optional[dict[str, Any]]) -> bytes:
         return b""
 
     writer = FArchiveWriter()
-    writer.tarray(lab_research_rep_info_read, p["research_info"])
+    writer.tarray(lab_research_rep_info_writer, p["research_info"])
     writer.fstring(p["current_research_id"])
 
     encoded_bytes = writer.bytes()
