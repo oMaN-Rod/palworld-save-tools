@@ -16,6 +16,13 @@ def pal_item_and_num_read(reader: FArchiveReader) -> dict[str, Any]:
     }
 
 
+def pal_item_and_slot_writer(writer: FArchiveWriter, p: dict[str, Any]) -> None:
+    writer.fstring(p["item_id"]["static_id"])
+    writer.guid(p["item_id"]["dynamic_id"]["created_world_id"])
+    writer.guid(p["item_id"]["dynamic_id"]["local_id_in_created_world"])
+    writer.u32(p["num"])
+
+
 def pal_item_booth_trade_info_read(reader: FArchiveReader) -> dict[str, Any]:
     return {
         "product": {
@@ -80,8 +87,13 @@ def pal_pal_booth_trade_info_writer(writer: FArchiveWriter, p: dict[str, Any]) -
     writer.guid(p["seller_player_uid"])
 
 
-def pal_item_and_slot_writer(writer: FArchiveWriter, p: dict[str, Any]) -> None:
-    writer.fstring(p["item_id"]["static_id"])
-    writer.guid(p["item_id"]["dynamic_id"]["created_world_id"])
-    writer.guid(p["item_id"]["dynamic_id"]["local_id_in_created_world"])
-    writer.u32(p["num"])
+def lab_research_rep_info_read(reader: FArchiveReader) -> dict[str, Any]:
+    return {
+        "research_id": reader.fstring(),
+        "work_amount": reader.float(),
+    }
+
+
+def lab_research_rep_info_writer(writer: FArchiveWriter, p: dict[str, Any]) -> None:
+    writer.fstring(p["research_id"])
+    writer.float(p["work_amount"])
