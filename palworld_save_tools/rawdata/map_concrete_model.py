@@ -451,12 +451,14 @@ def decode_bytes(
             if not reader.eof():
                 data["unknown_bytes"] = [int(b) for b in reader.read_to_end()]
         case "PalMapObjectMultiHatchingEggModel":
-            data["unknown_bytes"] = reader.u32()
+            data["unknown_bytes"] = [int(b) for b in reader.read_to_end()]
         case "PalMapObjectEnergyStorageModel":
             data["stored_energy_amount"] = reader.float()
         case "PalMapObjectDeathDroppedCharacterModel":
             data["stored_parameter_id"] = reader.guid()
             data["owner_player_uid"] = reader.guid()
+            if not reader.eof():
+                data["unknown_bytes"] = [int(b) for b in reader.read_to_end()]
         case "PalMapObjectConvertItemModel":
             data["current_recipe_id"] = reader.fstring()
             data["remain_product_num"] = reader.i32()
@@ -584,12 +586,14 @@ def encode_bytes(p: Optional[dict[str, Any]]) -> bytes:
             if "unknown_bytes" in p:
                 writer.write(bytes(p["unknown_bytes"]))
         case "PalMapObjectMultiHatchingEggModel":
-            writer.u32(p["unknown_bytes"])
+            writer.write(bytes(p["unknown_bytes"]))
         case "PalMapObjectEnergyStorageModel":
             writer.float(p["stored_energy_amount"])
         case "PalMapObjectDeathDroppedCharacterModel":
             writer.guid(p["stored_parameter_id"])
             writer.guid(p["owner_player_uid"])
+            if "unknown_bytes" in p:
+                writer.write(bytes(p["unknown_bytes"]))
         case "PalMapObjectConvertItemModel":
             writer.fstring(p["current_recipe_id"])
             writer.i32(p["remain_product_num"])
