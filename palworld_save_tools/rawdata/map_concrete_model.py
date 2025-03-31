@@ -366,6 +366,11 @@ MAP_OBJECT_NAME_TO_CONCRETE_MODEL_CLASS: dict[str, str] = {
     "basecampitemdispenser": "PalMapObjectBaseCampItemDispenserModel",
     "farm_skillfruits": "PalMapObjectFarmSkillFruitsModel",
     "expedition": "PalMapObjectCharacterTeamMissionModel",
+    "oilpump": "PalMapObjectProductItemModel",
+    "compositedesk": "PalMapObjectConvertItemModel",
+    "glass_doorwall": "PalMapObjectDoorModel",
+    "zaisu": "PalMapObjectPlayerSitModel",
+    "dimensionpalstorage": "PalMapObjectDimensionPalStorageModel",
 }
 NO_OP_TYPES = set(
     [
@@ -394,6 +399,7 @@ NO_OP_TYPES = set(
         "BlueprintGeneratedClass",
         "PalMapObjectGuildChestModel",
         "PalMapObjectBaseCampItemDispenserModel",
+        "PalMapObjectPlayerSitModel",
     ]
 )
 
