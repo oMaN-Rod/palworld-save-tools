@@ -412,6 +412,11 @@ class FArchiveReader:
                 "id": self.optional_guid(),
                 "value": self.u32(),
             }
+        elif type_name == "UInt64Property":
+            value = {
+                "id": self.optional_guid(),
+                "value": self.u64(),
+            }
         elif type_name == "Int64Property":
             value = {
                 "id": self.optional_guid(),
@@ -867,6 +872,10 @@ class FArchiveWriter:
             self.optional_guid(property.get("id", None))
             self.u32(property["value"])
             size = 4
+        elif property_type == "UInt64Property":
+            self.optional_guid(property.get("id", None))
+            self.u64(property["value"])
+            size = 8
         elif property_type == "Int64Property":
             self.optional_guid(property.get("id", None))
             self.i64(property["value"])
