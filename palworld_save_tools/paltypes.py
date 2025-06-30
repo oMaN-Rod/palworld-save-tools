@@ -56,6 +56,8 @@ PALWORLD_TYPE_HINTS: dict[str, str] = {
     ".worldSaveData.GuildExtraSaveDataMap.Key": "Guid",
     ".worldSaveData.GuildExtraSaveDataMap.Value": "StructProperty",
     ".worldSaveData.EnemyCampSaveData.EnemyCampStatusMap.Value.TreasureBoxInfoMapBySpawnerName.Value": "StructProperty",
+    ".worldSaveData.DungeonSaveData.DungeonSaveData.RewardSaveDataMap.Key": "Guid",
+    ".worldSaveData.DungeonSaveData.DungeonSaveData.RewardSaveDataMap.Value": "StructProperty",
 }
 
 PALWORLD_CUSTOM_PROPERTIES: dict[
