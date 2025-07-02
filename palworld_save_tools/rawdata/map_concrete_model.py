@@ -388,13 +388,6 @@ MAP_OBJECT_NAME_TO_CONCRETE_MODEL_CLASS: dict[str, str] = {
     "zabuton": "PalBuildObject",
     "headstone": "PalMapObjectSignboardModel",
 }
-NO_OP_TYPES = set(
-    [
-        "Default_PalMapObjectConcreteModelBase",
-        "PalMapObjectDisplayCharacterModel",
-        "PalMapObjectDamagedScarecrowModel",
-    ]
-)
 
 
 def decode_bytes(
@@ -418,8 +411,6 @@ def decode_bytes(
     ]
     data["concrete_model_type"] = map_object_concrete_model
     match map_object_concrete_model:
-        case model if model in NO_OP_TYPES:
-            pass
         case "PalMapObjectCharacterTeamMissionModel":
             data["mission_id"] = reader.fstring()
             data["state"] = reader.byte()
@@ -572,6 +563,9 @@ def decode_bytes(
             | "PalMapObjectPalMedicineBoxModel"
             | "PalMapObjectDefenseWaitModel"
             | "PalMapObjectHeatSourceModel"
+            | "PalMapObjectDisplayCharacterModel"
+            | "Default_PalMapObjectConcreteModelBase"
+            | "PalMapObjectDamagedScarecrowModel"
         ):
             data["trailing_bytes"] = reader.byte_list(4)
         case _:
@@ -600,8 +594,6 @@ def encode_bytes(p: Optional[dict[str, Any]]) -> bytes:
     writer.guid(p["model_instance_id"])
 
     match map_object_concrete_model:
-        case model if model in NO_OP_TYPES:
-            pass
         case "PalMapObjectCharacterTeamMissionModel":
             writer.fstring(p["mission_id"])
             writer.byte(p["state"])
@@ -747,6 +739,9 @@ def encode_bytes(p: Optional[dict[str, Any]]) -> bytes:
             | "PalMapObjectPalMedicineBoxModel"
             | "PalMapObjectDefenseWaitModel"
             | "PalMapObjectHeatSourceModel"
+            | "PalMapObjectDisplayCharacterModel"
+            | "Default_PalMapObjectConcreteModelBase"
+            | "PalMapObjectDamagedScarecrowModel"
         ):
             writer.write(bytes(p["trailing_bytes"]))
         case _:
