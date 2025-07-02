@@ -188,6 +188,10 @@ def encode(
 def encode_bytes(p: dict[str, Any], work_type: str) -> bytes:
     writer = FArchiveWriter()
 
+    if "values" in p:
+        writer.write(bytes(p["values"]))
+        return writer.bytes()
+
     # Handle base serialization
     if work_type in WORK_BASE_TYPES:
         writer.guid(p["id"])

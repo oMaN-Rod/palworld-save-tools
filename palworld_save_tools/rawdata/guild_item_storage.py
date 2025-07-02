@@ -17,7 +17,10 @@ def decode_bytes(
     parent_reader: FArchiveReader, m_bytes: Sequence[int]
 ) -> dict[str, Any]:
     reader = parent_reader.internal_copy(bytes(m_bytes), debug=False)
-    return {"container_id": reader.guid()}
+    data = {"container_id": reader.guid(), "trailing_bytes": reader.byte_list(4)}
+    if not reader.eof():
+        raise Exception("Warning: EOF not reached")
+    return data
 
 
 def encode(
@@ -37,6 +40,6 @@ def encode_bytes(p: Optional[dict[str, Any]]) -> bytes:
 
     writer = FArchiveWriter()
     writer.guid(p["container_id"])
-
+    writer.write(bytes(p["trailing_bytes"]))
     encoded_bytes = writer.bytes()
     return encoded_bytes
