@@ -55,7 +55,6 @@ def main():
         type=lambda t: [s.strip() for s in t.split(",")],
         help="Comma-separated list of custom properties to decode, or 'all' for all known properties. This can be used to speed up processing by excluding properties that are not of interest. (default: all)",
     )
-    parser.add_argument("--oodle-path", help="Use Oodle compression (default: false)")
 
     parser.add_argument("--minify-json", action="store_true", help="Minify JSON output")
     parser.add_argument("--raw", action="store_true", help="Output raw GVAS file")
@@ -85,7 +84,6 @@ def main():
             allow_nan=(not args.convert_nan_to_null),
             custom_properties_keys=args.custom_properties,
             raw=args.raw,
-            oodle_path=args.oodle_path,
         )
 
     if args.from_json or args.filename.endswith(".json"):
@@ -104,7 +102,6 @@ def convert_sav_to_json(
     allow_nan=True,
     custom_properties_keys=["all"],
     raw=False,
-    oodle_path=None,
 ):
     print(f"Converting {filename} to JSON, saving to {output_path}")
     if os.path.exists(output_path):
@@ -115,7 +112,7 @@ def convert_sav_to_json(
     print(f"Decompressing sav file")
     with open(filename, "rb") as f:
         data = f.read()
-        raw_gvas, _ = decompress_sav_to_gvas(data, oodle_path=oodle_path)
+        raw_gvas, _ = decompress_sav_to_gvas(data)
     if raw:
         output_dir = os.path.dirname(output_path)
         output_file_path = f"{output_dir}\\raw_gvas.sav" if raw else None
