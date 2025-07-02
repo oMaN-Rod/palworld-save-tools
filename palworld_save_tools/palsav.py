@@ -1,7 +1,7 @@
 import zlib
+import ooz
 
-MAGIC_BYTES = b"PlZ"
-
+MAGIC_BYTES = [b"PlZ", b"PlM"]
 
 def decompress_sav_to_gvas(data: bytes) -> tuple[bytes, int]:
     uncompressed_len = int.from_bytes(data[0:4], byteorder="little")
@@ -16,7 +16,10 @@ def decompress_sav_to_gvas(data: bytes) -> tuple[bytes, int]:
         magic_bytes = data[20:23]
         save_type = data[23]
         data_start_offset = 24
-    if magic_bytes != MAGIC_BYTES:
+
+    try:
+        compress_format = MAGIC_BYTES.index(magic_bytes) #0 for zlib, 1 for ooz kraken
+    except ValueError:
         if (
             magic_bytes == b"\x00\x00\x00"
             and uncompressed_len == 0
@@ -28,6 +31,7 @@ def decompress_sav_to_gvas(data: bytes) -> tuple[bytes, int]:
         raise Exception(
             f"not a compressed Palworld save, found {magic_bytes!r} instead of {MAGIC_BYTES!r}"
         )
+
     # Valid save types
     if save_type not in [0x30, 0x31, 0x32]:
         raise Exception(f"unknown save type: {save_type}")
@@ -35,11 +39,17 @@ def decompress_sav_to_gvas(data: bytes) -> tuple[bytes, int]:
     if save_type not in [0x31, 0x32]:
         raise Exception(f"unhandled compression type: {save_type}")
     if save_type == 0x31:
-        # Check if the compressed length is correct
+        # Check if the compressed length is correct and our save_type is consistent with our detected format
         if compressed_len != len(data) - data_start_offset:
             raise Exception(f"incorrect compressed length: {compressed_len}")
-    # Decompress file
-    uncompressed_data = zlib.decompress(data[data_start_offset:])
+        # Decompress file
+        if(compress_format == 0):
+            uncompressed_data = zlib.decompress(data[data_start_offset:])
+        else:
+            print("compressed_len is " + str(compressed_len) + " uncompressed len is " + str(uncompressed_len) + " data start offset is " + str(data_start_offset))
+            uncompressed_data = ooz.decompress(data[data_start_offset:], uncompressed_len)
+            print("decompression worked?")
+
     if save_type == 0x32:
         # Check if the compressed length is correct
         if compressed_len != len(uncompressed_data):
@@ -64,7 +74,7 @@ def compress_gvas_to_sav(data: bytes, save_type: int) -> bytes:
     result = bytearray()
     result.extend(uncompressed_len.to_bytes(4, byteorder="little"))
     result.extend(compressed_len.to_bytes(4, byteorder="little"))
-    result.extend(MAGIC_BYTES)
+    result.extend(MAGIC_BYTES[0])
     result.extend(bytes([save_type]))
     result.extend(compressed_data)
 
