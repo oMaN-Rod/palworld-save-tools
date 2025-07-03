@@ -613,6 +613,8 @@ def encode_bytes(p: Optional[dict[str, Any]]) -> bytes:
             writer.guid(p["private_lock_player_uid"])
             writer.tarray(pal_item_booth_trade_info_writer, p["trade_infos"])
             writer.write(bytes(p["trailing_bytes"]))
+        case "PalMapObjectPalBoothModel":
+            writer.write(bytes(p["unknown_bytes"]))
         case "PalMapObjectMultiHatchingEggModel":
             writer.write(bytes(p["unknown_bytes"]))
         case "PalMapObjectEnergyStorageModel":
