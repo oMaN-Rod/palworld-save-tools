@@ -120,7 +120,9 @@ def convert_sav_to_json(
         raw_gvas, _ = decompress_sav_to_gvas(data, oodle_path=oodle_path)
     if raw:
         output_dir = os.path.dirname(output_path)
-        output_file_path = f"{output_dir}\\raw_gvas.sav" if raw else None
+        output_file = f"{os.path.basename(output_path)}.bin"
+        output_file_path = f"{output_dir}\\{output_file}" if raw else None
+        print(f"Writing raw GVAS file to {output_file_path}")
         with open(output_file_path, "wb") as f:
             f.write(raw_gvas)
     print(f"Loading GVAS file")
