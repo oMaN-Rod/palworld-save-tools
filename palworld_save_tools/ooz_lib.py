@@ -6,7 +6,7 @@ import ctypes
 from typing import Tuple
 
 OODLE_COMPRESSOR_ID = 9  # mermaid
-OODLE_LEVEL = 4  # optimal
+OODLE_LEVEL = 4  # normal
 
 
 class OozLib:
