@@ -78,7 +78,7 @@ class OozLib(Compressor):
         if uncompressed_len == 0:
             raise ValueError("Input data for compression must not be empty.")
 
-        if save_type != SaveType.PLM:
+        if save_type != SaveType.PLM.value:
             raise ValueError(
                 f"Unhandled compression type: 0x{save_type:02X}, only 0x31 (PLM) is supported"
             )
@@ -86,7 +86,7 @@ class OozLib(Compressor):
         print("Compressing data...")
 
         compressed_data = self.ooz.compress(
-            OodleCompressor.Kraken, OodleLevel.Normal, data, uncompressed_len
+            OodleCompressor.Mermaid, OodleLevel.Normal, data, uncompressed_len
         )
 
         if not compressed_data:
