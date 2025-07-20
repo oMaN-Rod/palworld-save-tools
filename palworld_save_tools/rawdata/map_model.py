@@ -39,7 +39,11 @@ def decode_bytes(
     }
     data["created_at"] = reader.i64()
     if not reader.eof():
-        data["unknown_data"] = [int(b) for b in reader.read_to_end()]
+        unknown_bytes = [int(b) for b in reader.read_to_end()]
+        print(
+            f"Warning: Unknown data found in map model instance, length {len(unknown_bytes)}. Data: {' '.join(f'{b:02X}' for b in unknown_bytes)}"
+        )
+        data["unknown_bytes"] = unknown_bytes
     return data
 
 
@@ -78,8 +82,8 @@ def encode_bytes(p: dict[str, Any]) -> bytes:
     writer.u32(1 if p["stage_instance_id_belong_to"]["valid"] else 0)
 
     writer.i64(p["created_at"])
-    if "unknown_data" in p:
-        writer.write(bytes(p["unknown_data"]))
+    if "unknown_bytes" in p:
+        writer.write(bytes(p["unknown_bytes"]))
 
     encoded_bytes = writer.bytes()
     return encoded_bytes
