@@ -14,7 +14,10 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 dynamic = ["version"]
-dependencies = ["pyooz @ git+https://github.com/oMaN-Rod/pyooz.git"]
+dependencies = [
+    "loguru>=0.7.3",
+    "pyooz @ git+https://github.com/oMaN-Rod/pyooz.git",
+]
 
 [project.urls]
 Homepage = "https://github.com/cheahjs/palworld-save-tools"

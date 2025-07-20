@@ -6,6 +6,8 @@ import sys
 import uuid
 from typing import Any, Callable, Optional, Sequence, Union
 
+from loguru import logger
+
 # Alias stdlib types to avoid name conflicts
 _float = float
 _bytes = bytes
@@ -17,7 +19,7 @@ except ImportError:
 
 if os.getenv("FORCE_STDLIB_ONLY") or "recordclass" not in sys.modules:
     if os.getenv("DEBUG"):
-        print("Using stdlib-compatible UUID class")
+        logger.debug("Using stdlib-compatible UUID class")
 
     class UUID:
         """Wrapper around uuid.UUID to delay evaluation of UUIDs until necessary"""
@@ -108,7 +110,7 @@ if os.getenv("FORCE_STDLIB_ONLY") or "recordclass" not in sys.modules:
 
 else:
     if os.getenv("DEBUG"):
-        print("Using recordclass-based UUID class")
+        logger.debug("Using recordclass-based UUID class")
 
     @as_dataclass(hashable=True, fast_new=True)
     class UUID:  # type: ignore[no-redef]
@@ -250,7 +252,7 @@ class FArchiveReader:
         if path in self.type_hints:
             return self.type_hints[path]
         else:
-            print(f"Struct type for {path} not found, assuming {default}")
+            logger.warning(f"Struct type for {path} not found, assuming {default}")
             return default
 
     def eof(self) -> bool:
@@ -288,7 +290,7 @@ class FArchiveReader:
         except Exception as e:
             try:
                 escaped = data.decode(encoding, errors="surrogatepass")
-                print(
+                logger.warning(
                     f"Error decoding {encoding} string of length {size}, data loss may occur! {bytes(data)!r}"
                 )
                 return escaped
@@ -576,8 +578,7 @@ class FArchiveReader:
                 "a": self.float(),
             }
         else:
-            if self.debug:
-                print(f"Assuming struct type: {struct_type} ({path})")
+            logger.debug(f"Assuming struct type: {struct_type} ({path})")
             return self.properties_until_end(path)
 
     def array_property(self, array_type: str, size: int, path: str):
@@ -989,8 +990,7 @@ class FArchiveWriter:
             self.float(value["b"])
             self.float(value["a"])
         else:
-            if self.debug:
-                print(f"Assuming struct type: {struct_type}")
+            logger.debug(f"Assuming struct type: {struct_type}")
             return self.properties(value)
 
     def prop_value(self, type_name: str, struct_type_name: str, value):

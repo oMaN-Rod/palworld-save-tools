@@ -5,6 +5,8 @@ import struct
 import ctypes
 from typing import Tuple
 
+from loguru import logger
+
 OODLE_COMPRESSOR_ID = 9  # mermaid
 OODLE_LEVEL = 4  # normal
 
@@ -115,7 +117,7 @@ class OozLib:
         if len(sav_data) < 12:
             return -1
         magic = sav_data[8:11]
-        print(f"Checking SAV format, magic bytes: {magic!r}")
+        logger.debug(f"Checking SAV format, magic bytes: {magic!r}")
         if magic == b"PlM":
             return 1
         elif magic == b"PlZ":
@@ -151,7 +153,7 @@ class OozLib:
         """
         Decodes .sav file using libooz.dll with correct buffer padding.
         """
-        print("\nStarting decompression process with libooz.dll...")
+        logger.info("Starting decompression process with libooz.dll...")
 
         if not sav_data:
             raise ValueError("SAV data cannot be empty")
@@ -164,18 +166,18 @@ class OozLib:
         elif format_result == -1:
             raise ValueError("Unknown SAV file format")
 
-        print("Detected PLM format (Oodle), starting decompression...")
+        logger.info("Detected PLM format (Oodle), starting decompression...")
 
         uncompressed_len, compressed_len, magic, save_type, data_offset = (
             self._parse_sav_header(sav_data)
         )
 
-        print(f"File information (Decompress):")
-        print(f"  Magic bytes: {magic.decode('ascii', errors='ignore')}")
-        print(f"  Save type: 0x{save_type:02X}")
-        print(f"  Compressed size: {compressed_len:,} bytes")
-        print(f"  Uncompressed size: {uncompressed_len:,} bytes")
-        print(f"  Data offset: {data_offset} bytes")
+        logger.info(f"File information (Decompress):")
+        logger.info(f"  Magic bytes: {magic.decode('ascii', errors='ignore')}")
+        logger.info(f"  Save type: 0x{save_type:02X}")
+        logger.info(f"  Compressed size: {compressed_len:,} bytes")
+        logger.info(f"  Uncompressed size: {uncompressed_len:,} bytes")
+        logger.info(f"  Data offset: {data_offset} bytes")
 
         if len(sav_data) < data_offset + compressed_len:
             raise ValueError(
@@ -187,7 +189,7 @@ class OozLib:
             uncompressed_len + self.SAFE_SPACE_PADDING
         )
 
-        print("Calling Ooz_Decompress...")
+        logger.debug("Calling Ooz_Decompress...")
         result_size = self.lib.Ooz_Decompress(
             compressed_data,
             compressed_len,
@@ -218,7 +220,7 @@ class OozLib:
                 f"Expected at least {uncompressed_len}, got {result_size}"
             )
 
-        print(
+        logger.debug(
             f"Ooz_Decompress function reported writing {result_size} bytes (including padding)."
         )
         # =================================================================
@@ -226,21 +228,21 @@ class OozLib:
         # Slice the result to get clean GVAS data (this is correct)
         gvas_data = gvas_buffer.raw[:uncompressed_len]
 
-        print("Decompression successful!")
+        logger.info("Decompression successful!")
         return gvas_data, save_type
 
     def compress_gvas_to_sav(self, gvas_data: bytes, save_type: int) -> bytes:
         """
         Compresses GVAS data using libooz.dll (Ooz_Compress).
         """
-        print("\nStarting compression process with libooz.dll (memory method)...")
+        logger.info("Starting compression process with libooz.dll (memory method)...")
 
         src_len = len(gvas_data)
         if src_len == 0:
             raise ValueError("Input data for compression must not be empty.")
 
         if save_type == 0x32:
-            print("Force Zlib Compression")
+            logger.info("Force Zlib Compression")
             compressed_data = zlib.compress(gvas_data)
             compressed_len = len(compressed_data)
             compressed_data = zlib.compress(compressed_data)
@@ -252,7 +254,7 @@ class OozLib:
             dst_buf = ctypes.create_string_buffer(dst_capacity + 8)
 
             # === Call Ooz_Compress ===
-            print("Calling Ooz_Compress...")
+            logger.debug("Calling Ooz_Compress...")
             result = self.lib.Ooz_Compress(
                 OODLE_COMPRESSOR_ID,  # e.g. 8 for Kraken
                 ctypes.cast(src_buf, ctypes.c_void_p),
@@ -271,17 +273,17 @@ class OozLib:
             compressed_len = len(compressed_data)
             magic_bytes = b"PlM"
 
-        print(f"Compression successful, compressed size: {compressed_len:,} bytes")
+        logger.info(f"Compression successful, compressed size: {compressed_len:,} bytes")
 
-        print(f"File information (Compress):")
-        print(f"  Magic bytes: {magic_bytes.decode('ascii', errors='ignore')}")
-        print(f"  Save type: 0x{save_type:02X}")
-        print(f"  Compressed size: {compressed_len:,} bytes")
-        print(f"  Uncompressed size: {src_len:,} bytes")
-        print(f"  Hex dump: {compressed_data.hex()[:64]}")
+        logger.info(f"File information (Compress):")
+        logger.info(f"  Magic bytes: {magic_bytes.decode('ascii', errors='ignore')}")
+        logger.info(f"  Save type: 0x{save_type:02X}")
+        logger.info(f"  Compressed size: {compressed_len:,} bytes")
+        logger.info(f"  Uncompressed size: {src_len:,} bytes")
+        logger.info(f"  Hex dump: {compressed_data.hex()[:64]}")
 
         # === Build .sav file header ===
-        print("Building .sav file...")
+        logger.debug("Building .sav file...")
         result = bytearray()
         result.extend(src_len.to_bytes(4, "little"))
         result.extend(compressed_len.to_bytes(4, "little"))
@@ -289,7 +291,7 @@ class OozLib:
         result.extend(bytes([save_type]))
         result.extend(compressed_data)
 
-        print("Finished building .sav file.")
+        logger.debug("Finished building .sav file.")
         return bytes(result)
 
 
@@ -299,18 +301,18 @@ class OozLib:
 def main():
     """Example main function for testing decompression."""
     if len(sys.argv) != 3:
-        print(
+        logger.error(
             "A tool to decompress Palworld .sav files using the open-source libooz library."
         )
-        print("\nUsage:")
-        print("  Decompress: python your_script_name.py <input.sav> <output.gvas>")
+        logger.error("\nUsage:")
+        logger.error("  Decompress: python your_script_name.py <input.sav> <output.gvas>")
         sys.exit(1)
 
     input_file = sys.argv[1]
     output_file = sys.argv[2]
 
     if not os.path.exists(input_file):
-        print(f"Error: input file not found: {input_file}")
+        logger.error(f"Error: input file not found: {input_file}")
         sys.exit(1)
 
     try:
@@ -325,11 +327,11 @@ def main():
         with open(output_file, "wb") as f_out:
             f_out.write(gvas_data)
 
-        print(f"\nSuccess! Decompressed GVAS file saved to {output_file}")
-        print(f"Save Type: 0x{save_type:02X}")
+        logger.info(f"\nSuccess! Decompressed GVAS file saved to {output_file}")
+        logger.info(f"Save Type: 0x{save_type:02X}")
 
     except Exception as e:
-        print(f"\nFATAL ERROR: {e}")
+        logger.error(f"\nFATAL ERROR: {e}")
         import traceback
 
         traceback.print_exc()

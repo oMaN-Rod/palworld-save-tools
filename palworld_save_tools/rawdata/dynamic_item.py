@@ -1,5 +1,6 @@
 from typing import Any, Sequence
 
+from loguru import logger
 from palworld_save_tools.archive import *
 
 
@@ -51,8 +52,8 @@ def decode_bytes(
                 raise Exception("Warning: EOF not reached")
             data |= temp_data
         except Exception as e:
-            print(
-                f"Warning: Failed to parse weapon data, continuing as raw data {buf!r}: {e}"
+            logger.warning(
+                f"Failed to parse weapon data, continuing as raw data {buf!r}: {e}"
             )
             reader.data.seek(cur_pos)
             data["trailer"] = [int(b) for b in reader.read_to_end()]

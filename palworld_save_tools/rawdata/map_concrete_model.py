@@ -1,6 +1,7 @@
 import json
 from typing import Any, Sequence
 
+from loguru import logger
 from palworld_save_tools.archive import *
 from palworld_save_tools.json_tools import CustomEncoder
 from palworld_save_tools.rawdata.common import (
@@ -400,7 +401,7 @@ def decode_bytes(
     data: dict[str, Any] = {}
 
     if object_id.lower() not in MAP_OBJECT_NAME_TO_CONCRETE_MODEL_CLASS:
-        print(f"Warning: Map object '{object_id}' not in database, skipping")
+        logger.warning(f"Map object '{object_id}' not in database, skipping")
         return {"values": m_bytes}
 
     # Base handling
@@ -576,8 +577,8 @@ def decode_bytes(
         ):
             data["trailing_bytes"] = reader.byte_list(4)
         case _:
-            print(
-                f"Warning: Unknown map object concrete model {map_object_concrete_model}, skipping"
+            logger.warning(
+                f"Unknown map object concrete model {map_object_concrete_model}, skipping"
             )
             return {"values": m_bytes}
 

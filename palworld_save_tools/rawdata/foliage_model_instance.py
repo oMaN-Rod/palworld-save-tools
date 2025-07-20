@@ -1,5 +1,6 @@
 from typing import Any, Sequence
 
+from loguru import logger
 from palworld_save_tools.archive import *
 
 
@@ -38,8 +39,8 @@ def decode_bytes(
     data["hp"] = reader.i32()
     if not reader.eof():
         unknown_bytes = [int(b) for b in reader.read_to_end()]
-        print(
-            f"Warning: Unknown data found in foliage model instance, length {len(unknown_bytes)}. Data: {' '.join(f'{b:02X}' for b in unknown_bytes)}"
+        logger.warning(
+            f"Unknown data found in foliage model instance, length {len(unknown_bytes)}. Data: {' '.join(f'{b:02X}' for b in unknown_bytes)}"
         )
         data["unknown_bytes"] = unknown_bytes
     return data
