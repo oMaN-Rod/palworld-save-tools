@@ -992,7 +992,8 @@ class FArchiveWriter:
             self.float(value["b"])
             self.float(value["a"])
         else:
-            logger.debug(f"Assuming struct type: {struct_type}")
+            if self.debug:
+                logger.debug(f"Assuming struct type: {struct_type}")
             return self.properties(value)
 
     def prop_value(self, type_name: str, struct_type_name: str, value):
