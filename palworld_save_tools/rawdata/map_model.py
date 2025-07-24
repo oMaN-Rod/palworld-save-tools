@@ -79,11 +79,10 @@ def encode_bytes(p: dict[str, Any]) -> bytes:
     writer.guid(p["build_player_uid"])
 
     writer.byte(p["interact_restrict_type"])
-
+    writer.float(p["deterioration_damage"])
     writer.guid(p["stage_instance_id_belong_to"]["id"])
     writer.u32(1 if p["stage_instance_id_belong_to"]["valid"] else 0)
 
-    writer.i64(p["created_at"])
     if "unknown_bytes" in p:
         writer.write(bytes(p["unknown_bytes"]))
 
