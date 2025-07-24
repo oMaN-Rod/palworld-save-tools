@@ -132,7 +132,7 @@ class GvasFile:
             gvas_file.properties = reader.properties_until_end()
             gvas_file.trailer = reader.read_to_end()
             if gvas_file.trailer != b"\x00\x00\x00\x00":
-                logger.warning(
+                logger.debug(
                     f"{len(gvas_file.trailer)} bytes of trailer data, file may not have fully parsed"
                 )
         return gvas_file

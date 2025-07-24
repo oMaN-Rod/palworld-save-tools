@@ -59,7 +59,7 @@ class Compressor:
             case SaveType.CNK.value:
                 return SaveType.CNK
             case _:
-                logger.warning(f"Unknown save type: 0x{save_type:02X}")
+                logger.debug(f"Unknown save type: 0x{save_type:02X}")
                 return None
 
     def check_sav_format(self, sav_data: bytes) -> SaveType | None:
@@ -81,7 +81,7 @@ class Compressor:
             case MagicBytes.CNK.value:
                 return SaveType.CNK
             case _:
-                logger.warning(f"Unknown magic bytes: {magic!r}")
+                logger.debug(f"Unknown magic bytes: {magic!r}")
                 return None
 
     def build_sav(

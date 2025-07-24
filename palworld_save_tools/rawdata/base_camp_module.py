@@ -78,7 +78,7 @@ def decode_bytes(
             )
             data["trailing_bytes"] = reader.byte_list(4)
         except Exception as e:
-            logger.warning(
+            logger.debug(
                 f"Failed to decode transport item director, please report this: {e} ({bytes(b_bytes)!r})"
             )
             return {"values": b_bytes}
@@ -87,18 +87,18 @@ def decode_bytes(
             data["passive_effects"] = reader.tarray(module_passive_effect_reader)
         except Exception as e:
             reader.data.seek(0)
-            logger.warning(
+            logger.debug(
                 f"Failed to decode passive effect, please report this: {e} ({bytes(b_bytes)!r})"
             )
             return {"values": b_bytes}
     else:
-        logger.warning(
+        logger.debug(
             f"Unknown base camp module type {module_type}, falling back to raw bytes"
         )
         return {"values": b_bytes}
 
     if not reader.eof():
-        logger.warning(f"EOF not reached for {module_type}, falling back to raw bytes")
+        logger.debug(f"EOF not reached for {module_type}, falling back to raw bytes")
         return {"values": b_bytes}
 
     return data

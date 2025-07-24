@@ -39,7 +39,7 @@ def decode_bytes(
     data["hp"] = reader.i32()
     if not reader.eof():
         unknown_bytes = [int(b) for b in reader.read_to_end()]
-        logger.warning(
+        logger.debug(
             f"Unknown data found in foliage model instance, length {len(unknown_bytes)}. Data: {' '.join(f'{b:02X}' for b in unknown_bytes)}"
         )
         data["unknown_bytes"] = unknown_bytes

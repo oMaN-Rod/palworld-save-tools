@@ -253,7 +253,7 @@ class FArchiveReader:
             return self.type_hints[path]
         else:
             if self.debug:
-                logger.warning(f"Struct type for {path} not found, assuming {default}")
+                logger.debug(f"Struct type for {path} not found, assuming {default}")
             return default
 
     def eof(self) -> bool:
@@ -291,7 +291,7 @@ class FArchiveReader:
         except Exception as e:
             try:
                 escaped = data.decode(encoding, errors="surrogatepass")
-                logger.warning(
+                logger.debug(
                     f"Error decoding {encoding} string of length {size}, data loss may occur! {bytes(data)!r}"
                 )
                 return escaped

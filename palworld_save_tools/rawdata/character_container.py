@@ -28,7 +28,7 @@ def decode_bytes(
     }
     if not reader.eof():
         unknown_bytes = [int(b) for b in reader.read_to_end()]
-        logger.warning(
+        logger.debug(
             f"Unknown data in character container: {' '.join(f'{b:02x}' for b in unknown_bytes)}"
         )
         data["unknown_bytes"] = unknown_bytes

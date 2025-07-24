@@ -865,7 +865,7 @@ def decode_bytes(
     data: dict[str, Any] = {}
 
     if object_id.lower() not in MAP_OBJECT_NAME_TO_CONCRETE_MODEL_CLASS:
-        logger.warning(f"Map object '{object_id}' not in database, skipping")
+        logger.debug(f"Map object '{object_id}' not in database, skipping")
         return {"values": m_bytes}
 
     # Base handling
@@ -1044,7 +1044,7 @@ def decode_bytes(
         ):
             data["trailing_bytes"] = reader.byte_list(4)
         case _:
-            logger.warning(
+            logger.debug(
                 f"Unknown map object concrete model {map_object_concrete_model}, skipping"
             )
             return {"values": m_bytes}

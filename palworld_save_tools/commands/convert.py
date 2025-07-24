@@ -142,7 +142,7 @@ def convert_sav_to_json(
     start_time = time.perf_counter()
     logger.info(f"Converting {filename} to JSON, saving to {output_path}")
     if os.path.exists(output_path):
-        logger.warning(f"{output_path} already exists, this will overwrite the file")
+        logger.debug(f"{output_path} already exists, this will overwrite the file")
         if not force:
             if not confirm_prompt("Are you sure you want to continue?"):
                 exit(1)
@@ -186,7 +186,7 @@ def convert_sav_to_json(
 def convert_json_to_sav(filename, output_path, force=False, zlib=False):
     logger.info(f"Converting {filename} to SAV, saving to {output_path}")
     if os.path.exists(output_path):
-        logger.warning(f"{output_path} already exists, this will overwrite the file")
+        logger.debug(f"{output_path} already exists, this will overwrite the file")
         if not force:
             if not confirm_prompt("Are you sure you want to continue?"):
                 exit(1)

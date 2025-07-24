@@ -52,7 +52,7 @@ def decode_bytes(
                 raise Exception("Warning: EOF not reached")
             data |= temp_data
         except Exception as e:
-            logger.warning(
+            logger.debug(
                 f"Failed to parse weapon data, continuing as raw data {buf!r}: {e}"
             )
             reader.data.seek(cur_pos)

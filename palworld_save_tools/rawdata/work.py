@@ -120,7 +120,7 @@ def decode_bytes(
             data["target_map_object_model_id"] = reader.guid()
 
     if len(data.keys()) == 0:
-        logger.warning(f"Unable to parse {work_type}, falling back to raw bytes")
+        logger.debug(f"Unable to parse {work_type}, falling back to raw bytes")
         return {"values": b_bytes}
     # UPalWorkProgressTransformBase->SerializeProperties
     transform_type = reader.byte()
