@@ -1,7 +1,7 @@
-from typing import Any, Sequence
+from typing import Any, Optional, Sequence
 
 from loguru import logger
-from palworld_save_tools.archive import *
+from palworld_save_tools.archive import FArchiveReader, FArchiveWriter
 
 
 def decode(
@@ -23,12 +23,12 @@ def decode_bytes(
     buf = bytes(c_bytes)
     reader = parent_reader.internal_copy(buf, debug=False)
     data: dict[str, Any] = {}
+    data["type"] = "unknown"
     data["id"] = {
         "created_world_id": reader.guid(),
         "local_id_in_created_world": reader.guid(),
         "static_id": reader.fstring(),
     }
-    data["type"] = "unknown"
     egg_data = try_read_egg(reader)
     if isinstance(egg_data, dict):
         data |= egg_data

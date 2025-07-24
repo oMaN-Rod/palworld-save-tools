@@ -1,7 +1,7 @@
 from typing import Any, Sequence
 
 from loguru import logger
-from palworld_save_tools.archive import *
+from palworld_save_tools.archive import FArchiveReader, FArchiveWriter
 
 
 def decode(
@@ -34,11 +34,12 @@ def decode_bytes(
     data["owner_instance_id"] = reader.guid()
     data["build_player_uid"] = reader.guid()
     data["interact_restrict_type"] = reader.byte()
+    data["deterioration_damage"] = reader.float()
     data["stage_instance_id_belong_to"] = {
         "id": reader.guid(),
         "valid": reader.u32() > 0,
     }
-    data["created_at"] = reader.i64()
+
     if not reader.eof():
         unknown_bytes = [int(b) for b in reader.read_to_end()]
         logger.warning(

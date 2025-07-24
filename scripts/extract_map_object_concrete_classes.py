@@ -134,7 +134,7 @@ def main():
                     "DEFAULT_UNKNOWN_PalMapObjectConcreteModelBase"
                 )
 
-    logger.info("Writing concrete classes to file")
+    logger.info(f"Writing concrete classes to file {export_path}")
     with open(
         os.path.join(export_path, "concrete_classes.json"), "w", encoding="utf-8"
     ) as f:

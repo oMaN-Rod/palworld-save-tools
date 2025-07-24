@@ -252,7 +252,8 @@ class FArchiveReader:
         if path in self.type_hints:
             return self.type_hints[path]
         else:
-            logger.warning(f"Struct type for {path} not found, assuming {default}")
+            if self.debug:
+                logger.warning(f"Struct type for {path} not found, assuming {default}")
             return default
 
     def eof(self) -> bool:
@@ -578,7 +579,8 @@ class FArchiveReader:
                 "a": self.float(),
             }
         else:
-            logger.debug(f"Assuming struct type: {struct_type} ({path})")
+            if self.debug:
+                logger.debug(f"Assuming struct type: {struct_type} ({path})")
             return self.properties_until_end(path)
 
     def array_property(self, array_type: str, size: int, path: str):
