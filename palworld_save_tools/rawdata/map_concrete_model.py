@@ -962,6 +962,8 @@ def decode_bytes(
             data["trailing_bytes"] = reader.byte_list(8)
         case "PalMapObjectFastTravelPointModel":
             data["location_instance_id"] = reader.guid()
+            if not reader.eof():
+                data["unknown_bytes"] = [int(b) for b in reader.read_to_end()]
         case "PalMapObjectShippingItemModel":
             data["shipping_hours"] = reader.tarray(lambda r: r.i32())
         case "PalMapObjectProductItemModel":
@@ -1146,6 +1148,8 @@ def encode_bytes(p: Optional[dict[str, Any]]) -> bytes:
             writer.write(bytes(p["trailing_bytes"]))
         case "PalMapObjectFastTravelPointModel":
             writer.guid(p["location_instance_id"])
+            if "unknown_bytes" in p:
+                writer.write(bytes(p["unknown_bytes"]))
         case "PalMapObjectShippingItemModel":
             writer.tarray(lambda w, x: w.i32(x), p["shipping_hours"])
         case "PalMapObjectProductItemModel":
