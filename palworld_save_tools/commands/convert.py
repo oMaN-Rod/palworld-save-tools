@@ -205,7 +205,7 @@ def convert_json_to_sav(filename, output_path, force=False, zlib=False):
     if zlib:
         save_type = 0x32  # Use double zlib compression
     sav_file = compress_gvas_to_sav(
-        gvas_file.write(PALWORLD_CUSTOM_PROPERTIES), save_type, zlib=zlib
+        gvas_file.write(PALWORLD_CUSTOM_PROPERTIES), save_type
     )
     logger.info(f"Writing SAV file to {output_path}")
     with open(output_path, "wb") as f:
