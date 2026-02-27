@@ -578,6 +578,13 @@ class FArchiveReader:
                 "b": self.float(),
                 "a": self.float(),
             }
+        elif struct_type == "Color":
+            return {
+                "b": self.byte(),
+                "g": self.byte(),
+                "r": self.byte(),
+                "a": self.byte(),
+            }
         else:
             if self.debug:
                 logger.debug(f"Assuming struct type: {struct_type} ({path})")
@@ -991,6 +998,11 @@ class FArchiveWriter:
             self.float(value["g"])
             self.float(value["b"])
             self.float(value["a"])
+        elif struct_type == "Color":
+            self.byte(value["b"])
+            self.byte(value["g"])
+            self.byte(value["r"])
+            self.byte(value["a"])
         else:
             if self.debug:
                 logger.debug(f"Assuming struct type: {struct_type}")
