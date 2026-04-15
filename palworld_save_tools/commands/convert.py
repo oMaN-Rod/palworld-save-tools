@@ -1,11 +1,32 @@
 #!/usr/bin/env python3
 
 import argparse
+import contextlib
+import gc
 import sys
 import time
 import os
 
 from loguru import logger
+
+
+@contextlib.contextmanager
+def _gc_paused():
+    """Pause the cyclic GC for a hot build-up phase.
+
+    The parser/writer produce tree-shaped dicts and lists with no reference
+    cycles, so generational sweeps during the build are pure overhead.
+    We re-enable and force a single collection on exit.
+    """
+    was_enabled = gc.isenabled()
+    if was_enabled:
+        gc.disable()
+    try:
+        yield
+    finally:
+        if was_enabled:
+            gc.enable()
+            gc.collect()
 from palworld_save_tools.gvas import GvasFile
 from palworld_save_tools import json_tools
 from palworld_save_tools.palsav import compress_gvas_to_sav, decompress_sav_to_gvas
@@ -164,16 +185,18 @@ def convert_sav_to_json(
         for prop in PALWORLD_CUSTOM_PROPERTIES:
             if prop in custom_properties_keys:
                 custom_properties[prop] = PALWORLD_CUSTOM_PROPERTIES[prop]
-    gvas_file = GvasFile.read(
-        raw_gvas, PALWORLD_TYPE_HINTS, custom_properties, allow_nan=allow_nan
-    )
+    with _gc_paused():
+        gvas_file = GvasFile.read(
+            raw_gvas, PALWORLD_TYPE_HINTS, custom_properties, allow_nan=allow_nan
+        )
     gvas_parse_time = time.perf_counter()
     logger.info(f"GVAS file loaded in {gvas_parse_time - start_time:.2f} seconds")
     logger.info(f"Writing JSON to {output_path}")
     write_start_time = time.perf_counter()
-    json_tools.dump(
-        gvas_file.dump(), output_path, minify=minify, allow_nan=allow_nan
-    )
+    with _gc_paused():
+        json_tools.dump(
+            gvas_file.dump(), output_path, minify=minify, allow_nan=allow_nan
+        )
     write_end_time = time.perf_counter()
     logger.info(f"JSON written in {write_end_time - write_start_time:.2f} seconds")
     end_time = time.perf_counter()
@@ -188,8 +211,9 @@ def convert_json_to_sav(filename, output_path, force=False, zlib=False):
             if not confirm_prompt("Are you sure you want to continue?"):
                 exit(1)
     logger.info(f"Loading JSON from {filename}")
-    data = json_tools.load(filename)
-    gvas_file = GvasFile.load(data)
+    with _gc_paused():
+        data = json_tools.load(filename)
+        gvas_file = GvasFile.load(data)
     logger.info("Compressing SAV file")
     if (
         "Pal.PalWorldSaveGame" in gvas_file.header.save_game_class_name
@@ -200,9 +224,9 @@ def convert_json_to_sav(filename, output_path, force=False, zlib=False):
         save_type = 0x31
     if zlib:
         save_type = 0x32  # Use double zlib compression
-    sav_file = compress_gvas_to_sav(
-        gvas_file.write(PALWORLD_CUSTOM_PROPERTIES), save_type
-    )
+    with _gc_paused():
+        written = gvas_file.write(PALWORLD_CUSTOM_PROPERTIES)
+    sav_file = compress_gvas_to_sav(written, save_type)
     logger.info(f"Writing SAV file to {output_path}")
     with open(output_path, "wb") as f:
         f.write(sav_file)
