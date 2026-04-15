@@ -336,7 +336,7 @@ class FArchiveReader:
         val = FArchiveReader.unpack_float(self.data.read(4))[0]
         if self.allow_nan:
             return val
-        if val == math.nan or val == math.inf or val == -math.inf:
+        if math.isnan(val) or math.isinf(val):
             return None
         return val
 
@@ -346,7 +346,7 @@ class FArchiveReader:
         val = FArchiveReader.unpack_double(self.data.read(8))[0]
         if self.allow_nan:
             return val
-        if val == math.nan or val == math.inf or val == -math.inf:
+        if math.isnan(val) or math.isinf(val):
             return None
         return val
 
