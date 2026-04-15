@@ -880,14 +880,15 @@ class FArchiveWriter:
     def property(self, property: dict[str, Any]):
         # write type_name
         self.fstring(property["type"])
-        nested_writer = self.copy()
-        size: int
         property_type = property["type"]
-        size = nested_writer.property_inner(property_type, property)
-        buf = nested_writer.bytes()
-        # write size
-        self.u64(size)
-        self.write(buf)
+        # reserve 8 bytes for the u64 size, patch once we know it
+        size_pos = self.data.tell()
+        self.data.write(b"\x00" * 8)
+        size = self.property_inner(property_type, property)
+        end_pos = self.data.tell()
+        self.data.seek(size_pos)
+        self.data.write(FArchiveWriter._pack_u64(size))
+        self.data.seek(end_pos)
 
     def property_inner(self, property_type: str, property: dict[str, Any]) -> int:
         if "custom_type" in property:
@@ -954,44 +955,35 @@ class FArchiveWriter:
         elif property_type == "ArrayProperty":
             self.fstring(property["array_type"])
             self.optional_guid(property.get("id", None))
-            array_writer = self.copy()
-            array_writer.array_property(property["array_type"], property["value"])
-            array_buf = array_writer.bytes()
-            size = len(array_buf)
-            self.write(array_buf)
+            start = self.data.tell()
+            self.array_property(property["array_type"], property["value"])
+            size = self.data.tell() - start
         elif property_type == "MapProperty":
             self.fstring(property["key_type"])
             self.fstring(property["value_type"])
             self.optional_guid(property.get("id", None))
-            map_writer = self.copy()
-            map_writer.u32(0)
-            map_writer.u32(len(property["value"]))
+            start = self.data.tell()
+            self.u32(0)
+            self.u32(len(property["value"]))
             for entry in property["value"]:
-                map_writer.prop_value(
+                self.prop_value(
                     property["key_type"], property["key_struct_type"], entry["key"]
                 )
-                map_writer.prop_value(
+                self.prop_value(
                     property["value_type"],
                     property["value_struct_type"],
                     entry["value"],
                 )
-            map_buf = map_writer.bytes()
-            size = len(map_buf)
-            self.write(map_buf)
+            size = self.data.tell() - start
         elif property_type == "SetProperty":
             self.fstring(property["set_type"])
             self.optional_guid(property.get("id", None))
-            set_writer = self.copy()
-            set_writer.u32(0)
-            set_writer.u32(len(property["value"]))
-
+            start = self.data.tell()
+            self.u32(0)
+            self.u32(len(property["value"]))
             for element in property["value"]:
-                set_writer.properties(element)
-
-            set_bytes = set_writer.bytes()
-            self.write(set_bytes)
-
-            size = len(set_bytes)
+                self.properties(element)
+            size = self.data.tell() - start
         else:
             raise Exception(f"Unknown property type: {property_type}")
         return size
@@ -1052,15 +1044,19 @@ class FArchiveWriter:
         if array_type == "StructProperty":
             self.fstring(value["prop_name"])
             self.fstring(value["prop_type"])
-            nested_writer = self.copy()
-            for i in range(count):
-                nested_writer.struct_value(value["type_name"], value["values"][i])
-            data_buf = nested_writer.bytes()
-            self.u64(len(data_buf))
+            # Reserve the u64 size; we know the length only after writing the body
+            size_pos = self.data.tell()
+            self.data.write(b"\x00" * 8)
             self.fstring(value["type_name"])
             self.guid(value["id"])
             self.u(0)
-            self.write(data_buf)
+            data_start = self.data.tell()
+            for i in range(count):
+                self.struct_value(value["type_name"], value["values"][i])
+            end_pos = self.data.tell()
+            self.data.seek(size_pos)
+            self.data.write(FArchiveWriter._pack_u64(end_pos - data_start))
+            self.data.seek(end_pos)
         else:
             self.array_value(array_type, count, value["values"])
 
