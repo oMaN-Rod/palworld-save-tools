@@ -46,7 +46,7 @@ def decode(
 def decode_bytes(
     parent_reader: FArchiveReader, b_bytes: Sequence[int], work_type: str
 ) -> dict[str, Any]:
-    reader = parent_reader.internal_copy(bytes(b_bytes), debug=False)
+    reader = parent_reader.internal_copy(coerce_bytes(b_bytes), debug=False)
     data: dict[str, Any] = {}
     # Handle base serialization
     if work_type in WORK_BASE_TYPES:
@@ -142,7 +142,7 @@ def decode_bytes(
 def decode_work_assign_bytes(
     parent_reader: FArchiveReader, b_bytes: Sequence[int]
 ) -> dict[str, Any]:
-    reader = parent_reader.internal_copy(bytes(b_bytes), debug=False)
+    reader = parent_reader.internal_copy(coerce_bytes(b_bytes), debug=False)
     data: dict[str, Any] = {}
 
     data["id"] = reader.guid()
@@ -170,18 +170,13 @@ def encode(
     for work_element in properties["value"]["values"]:
         work_type = work_element["WorkableType"]["value"]["value"]
         work_element["RawData"]["value"] = {
-            "values": [
-                b for b in encode_bytes(work_element["RawData"]["value"], work_type)
-            ]
+            "values": encode_bytes(work_element["RawData"]["value"], work_type)
         }
         for work_assign in work_element["WorkAssignMap"]["value"]:
             work_assign["value"]["RawData"]["value"] = {
-                "values": [
-                    b
-                    for b in encode_work_assign_bytes(
-                        work_assign["value"]["RawData"]["value"]
-                    )
-                ]
+                "values": encode_work_assign_bytes(
+                    work_assign["value"]["RawData"]["value"]
+                )
             }
     return writer.property_inner(property_type, properties)
 
@@ -190,7 +185,7 @@ def encode_bytes(p: dict[str, Any], work_type: str) -> bytes:
     writer = FArchiveWriter()
 
     if "values" in p:
-        writer.write(bytes(p["values"]))
+        writer.write(coerce_bytes(p["values"]))
         return writer.bytes()
 
     # Handle base serialization
@@ -222,9 +217,9 @@ def encode_bytes(p: dict[str, Any], work_type: str) -> bytes:
         writer.u32(1 if p["can_steal_assign"] else 0)
         match work_type:
             case "EPalWorkableType::Defense":
-                writer.write(bytes(p["leading_bytes"]))
+                writer.write(coerce_bytes(p["leading_bytes"]))
                 writer.byte(p["defense_combat_type"])
-                writer.write(bytes(p["trailing_bytes"]))
+                writer.write(coerce_bytes(p["trailing_bytes"]))
             case "EPalWorkableType::Progress":
                 writer.float(p["required_work_amount"])
                 writer.float(p["current_work_amount"])
@@ -264,7 +259,7 @@ def encode_bytes(p: dict[str, Any], work_type: str) -> bytes:
     match transform_type:
         case 2:
             writer.guid(p["transform"]["map_object_instance_id"])
-            writer.write(bytes(p["transform"]["trailing_bytes"]))
+            writer.write(coerce_bytes(p["transform"]["trailing_bytes"]))
 
     encoded_bytes = writer.bytes()
     return encoded_bytes
@@ -280,6 +275,6 @@ def encode_work_assign_bytes(p: dict[str, Any]) -> bytes:
     writer.guid(p["assigned_individual_id"]["instance_id"])
     writer.byte(p["state"])
     writer.u32(1 if p["fixed"] else 0)
-    writer.write(bytes(p["trailing_bytes"]))
+    writer.write(coerce_bytes(p["trailing_bytes"]))
     encoded_bytes = writer.bytes()
     return encoded_bytes

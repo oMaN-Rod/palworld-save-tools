@@ -1,7 +1,7 @@
 from typing import Any, Optional, Sequence
 
 from loguru import logger
-from palworld_save_tools.archive import FArchiveReader, FArchiveWriter
+from palworld_save_tools.archive import FArchiveReader, FArchiveWriter, coerce_bytes
 
 
 def decode(
@@ -20,7 +20,7 @@ def decode_bytes(
 ) -> Optional[dict[str, Any]]:
     if len(c_bytes) == 0:
         return None
-    buf = bytes(c_bytes)
+    buf = coerce_bytes(c_bytes)
     reader = parent_reader.internal_copy(buf, debug=False)
     data: dict[str, Any] = {}
     data["type"] = "unknown"
@@ -56,7 +56,7 @@ def decode_bytes(
                 f"Failed to parse weapon data, continuing as raw data {buf!r}: {e}"
             )
             reader.data.seek(cur_pos)
-            data["trailer"] = [int(b) for b in reader.read_to_end()]
+            data["trailer"] = reader.read_to_end()
     return data
 
 
@@ -85,7 +85,7 @@ def encode(
         raise Exception(f"Expected ArrayProperty, got {property_type}")
     del properties["custom_type"]
     encoded_bytes = encode_bytes(properties["value"])
-    properties["value"] = {"values": [b for b in encoded_bytes]}
+    properties["value"] = {"values": encoded_bytes}
     return writer.property_inner(property_type, properties)
 
 
@@ -97,21 +97,21 @@ def encode_bytes(p: dict[str, Any]) -> bytes:
     writer.guid(p["id"]["local_id_in_created_world"])
     writer.fstring(p["id"]["static_id"])
     if p["type"] == "unknown":
-        writer.write(bytes(p["trailer"]))
+        writer.write(coerce_bytes(p["trailer"]))
     elif p["type"] == "egg":
-        writer.write(bytes(p["leading_bytes"]))
+        writer.write(coerce_bytes(p["leading_bytes"]))
         writer.fstring(p["character_id"])
         writer.properties(p["object"])
-        writer.write(bytes(p["trailing_bytes"]))
+        writer.write(coerce_bytes(p["trailing_bytes"]))
     elif p["type"] == "armor":
-        writer.write(bytes(p["leading_bytes"]))
+        writer.write(coerce_bytes(p["leading_bytes"]))
         writer.float(p["durability"])
-        writer.write(bytes(p["trailing_bytes"]))
+        writer.write(coerce_bytes(p["trailing_bytes"]))
     elif p["type"] == "weapon":
-        writer.write(bytes(p["leading_bytes"]))
+        writer.write(coerce_bytes(p["leading_bytes"]))
         writer.float(p["durability"])
         writer.i32(p["remaining_bullets"])
         writer.tarray(lambda w, d: (w.fstring(d), None)[1], p["passive_skill_list"])
-        writer.write(bytes(p["trailing_bytes"]))
+        writer.write(coerce_bytes(p["trailing_bytes"]))
     encoded_bytes = writer.bytes()
     return encoded_bytes

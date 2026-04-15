@@ -18,7 +18,7 @@ def decode(
 def decode_bytes(
     parent_reader: FArchiveReader, b_bytes: Sequence[int]
 ) -> dict[str, Any]:
-    reader = parent_reader.internal_copy(bytes(b_bytes), debug=False)
+    reader = parent_reader.internal_copy(coerce_bytes(b_bytes), debug=False)
     data: dict[str, Any] = {}
     data["model_instance_id"] = reader.guid()
     pitch, yaw, roll = reader.compressed_short_rotator()
@@ -38,7 +38,7 @@ def decode_bytes(
     }
     data["hp"] = reader.i32()
     if not reader.eof():
-        unknown_bytes = [int(b) for b in reader.read_to_end()]
+        unknown_bytes = reader.read_to_end()
         logger.debug(
             f"Unknown data found in foliage model instance, length {len(unknown_bytes)}. Data: {' '.join(f'{b:02X}' for b in unknown_bytes)}"
         )
@@ -53,7 +53,7 @@ def encode(
         raise Exception(f"Expected ArrayProperty, got {property_type}")
     del properties["custom_type"]
     encoded_bytes = encode_bytes(properties["value"])
-    properties["value"] = {"values": [b for b in encoded_bytes]}
+    properties["value"] = {"values": encoded_bytes}
     return writer.property_inner(property_type, properties)
 
 
@@ -75,7 +75,7 @@ def encode_bytes(p: dict[str, Any]) -> bytes:
     writer.float(p["world_transform"]["scale_x"])
     writer.i32(p["hp"])
     if "unknown_bytes" in p:
-        writer.write(bytes(p["unknown_bytes"]))
+        writer.write(coerce_bytes(p["unknown_bytes"]))
 
     encoded_bytes = writer.bytes()
     return encoded_bytes

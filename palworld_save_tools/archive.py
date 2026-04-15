@@ -1,3 +1,4 @@
+import base64
 import io
 import math
 import os
@@ -7,6 +8,24 @@ import uuid
 from typing import Any, Callable, Optional, Sequence, Union
 
 from loguru import logger
+
+
+def coerce_bytes(value) -> bytes:
+    """Normalize raw-byte-blob fields into ``bytes``.
+
+    Accepts:
+      * ``bytes`` / ``bytearray`` from a fresh SAV parse,
+      * ``str`` from a JSON load (base64-encoded — the new wire format),
+      * ``list[int]`` / ``tuple[int]`` from a JSON load of the legacy
+        format where byte blobs were expanded into integer arrays.
+    """
+    if isinstance(value, bytes):
+        return value
+    if isinstance(value, bytearray):
+        return bytes(value)
+    if isinstance(value, str):
+        return base64.b64decode(value)
+    return bytes(value)
 
 # Alias stdlib types to avoid name conflicts
 _float = float
@@ -355,8 +374,8 @@ class FArchiveReader:
     def byte(self) -> int:
         return FArchiveReader.unpack_byte(self.data.read(1))[0]
 
-    def byte_list(self, size: int) -> Sequence[int]:
-        return struct.unpack(str(size) + "B", self.data.read(size))
+    def byte_list(self, size: int) -> bytes:
+        return self.data.read(size)
 
     def skip(self, size: int) -> None:
         self.data.read(size)
@@ -1061,9 +1080,9 @@ class FArchiveWriter:
             raise Exception(f"Unknown property value type: {type_name}")
 
     def array_property(self, array_type: str, value: dict[str, Any]):
-        count = len(value["values"])
-        self.u32(count)
         if array_type == "StructProperty":
+            count = len(value["values"])
+            self.u32(count)
             self.fstring(value["prop_name"])
             self.fstring(value["prop_type"])
             # Reserve the u64 size; we know the length only after writing the body
@@ -1079,7 +1098,15 @@ class FArchiveWriter:
             self.data.seek(size_pos)
             self.data.write(FArchiveWriter._pack_u64(end_pos - data_start))
             self.data.seek(end_pos)
+        elif array_type == "ByteProperty":
+            # Fast path: raw byte blob. Values may be bytes (fresh parse),
+            # str (base64 from JSON), or list[int] (legacy JSON).
+            buf = coerce_bytes(value["values"])
+            self.u32(len(buf))
+            self.write(buf)
         else:
+            count = len(value["values"])
+            self.u32(count)
             self.array_value(array_type, count, value["values"])
 
     def array_value(self, array_type: str, count: int, values: list[Any]):

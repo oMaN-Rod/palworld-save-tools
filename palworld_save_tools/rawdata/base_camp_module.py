@@ -2,7 +2,7 @@ from typing import Any, Sequence
 
 from loguru import logger
 
-from palworld_save_tools.archive import FArchiveReader, FArchiveWriter
+from palworld_save_tools.archive import FArchiveReader, FArchiveWriter, coerce_bytes
 from palworld_save_tools.rawdata.common import (
     pal_item_and_num_read,
     pal_item_and_slot_writer,
@@ -60,14 +60,14 @@ def module_passive_effect_reader(reader: FArchiveReader) -> dict[str, Any]:
         raise Exception(f"Unknown passive effect type {data['type']}")
     elif data["type"] == 2:
         data["work_hard_type"] = reader.byte()
-        data["unknown_trailer"] = [b for b in reader.read(12)]
+        data["unknown_trailer"] = reader.read(12)
     return data
 
 
 def decode_bytes(
     parent_reader: FArchiveReader, b_bytes: Sequence[int], module_type: str
 ) -> dict[str, Any]:
-    reader = parent_reader.internal_copy(bytes(b_bytes), debug=False)
+    reader = parent_reader.internal_copy(coerce_bytes(b_bytes), debug=False)
     data: dict[str, Any] = {}
     if module_type in NO_OP_TYPES:
         pass
@@ -133,14 +133,14 @@ def module_passive_effect_writer(writer: FArchiveWriter, p: dict[str, Any]) -> N
     writer.byte(p["type"])
     if p["type"] == 2:
         writer.byte(p["work_hard_type"])
-        writer.write(bytes(p["unknown_trailer"]))
+        writer.write(coerce_bytes(p["unknown_trailer"]))
 
 
 def encode_bytes(p: dict[str, Any], module_type: str) -> bytes:
     writer = FArchiveWriter()
 
     if "values" in p:
-        writer.write(bytes(p["values"]))
+        writer.write(coerce_bytes(p["values"]))
         return writer.bytes()
 
     if module_type in NO_OP_TYPES:
@@ -149,7 +149,7 @@ def encode_bytes(p: dict[str, Any], module_type: str) -> bytes:
         writer.tarray(
             transport_item_character_info_writer, p["transport_item_character_infos"]
         )
-        writer.write(bytes(p["trailing_bytes"]))
+        writer.write(coerce_bytes(p["trailing_bytes"]))
     elif module_type == "EPalBaseCampModuleType::PassiveEffect":
         writer.tarray(module_passive_effect_writer, p["passive_effects"])
 

@@ -1,3 +1,4 @@
+import base64
 import json
 import math
 import uuid
@@ -7,14 +8,19 @@ import orjson
 from palworld_save_tools.archive import UUID
 
 
+def _bytes_to_str(obj: bytes) -> str:
+    """Encode a raw byte blob as base64 ASCII string for JSON."""
+    return base64.b64encode(obj).decode("ascii")
+
+
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
             return str(obj)
         if isinstance(obj, uuid.UUID):
             return str(obj)
-        if isinstance(obj, bytes):
-            return obj.hex()
+        if isinstance(obj, (bytes, bytearray)):
+            return _bytes_to_str(bytes(obj))
         return super(CustomEncoder, self).default(obj)
 
 
@@ -23,8 +29,8 @@ def _orjson_default(obj):
         return str(obj)
     if isinstance(obj, uuid.UUID):
         return str(obj)
-    if isinstance(obj, bytes):
-        return obj.hex()
+    if isinstance(obj, (bytes, bytearray)):
+        return _bytes_to_str(bytes(obj))
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 

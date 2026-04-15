@@ -37,7 +37,7 @@ def decode_bytes(
 ) -> Optional[dict[str, Any]]:
     if len(m_bytes) == 0:
         return {"values": []}
-    reader = parent_reader.internal_copy(bytes(m_bytes), debug=False)
+    reader = parent_reader.internal_copy(coerce_bytes(m_bytes), debug=False)
     data: dict[str, Any] = {}
 
     match module_type:
@@ -103,24 +103,24 @@ def encode_bytes(p: dict[str, Any], module_type: str) -> bytes:
             writer.tarray(lambda w, v: w.byte(v), p["all_slot_attribute"])
             writer.u32(1 if p["drop_item_at_disposed"] else 0)
             writer.byte(p["usage_type"])
-            writer.write(bytes(p["trailing_bytes"]))
+            writer.write(coerce_bytes(p["trailing_bytes"]))
         case "EPalMapObjectConcreteModelModuleType::CharacterContainer":
             writer.guid(p["target_container_id"])
-            writer.write(bytes(p["trailing_bytes"]))
+            writer.write(coerce_bytes(p["trailing_bytes"]))
         case "EPalMapObjectConcreteModelModuleType::Workee":
             writer.guid(p["target_work_id"])
-            writer.write(bytes(p["trailing_bytes"]))
+            writer.write(coerce_bytes(p["trailing_bytes"]))
         case "EPalMapObjectConcreteModelModuleType::Switch":
             writer.byte(p["switch_state"])
-            writer.write(bytes(p["trailing_bytes"]))
+            writer.write(coerce_bytes(p["trailing_bytes"]))
         case "EPalMapObjectConcreteModelModuleType::PasswordLock":
             writer.byte(p["lock_state"])
             writer.fstring(p["password"])
             writer.tarray(player_lock_info_writer, p["player_infos"])
-            writer.write(bytes(p["trailing_bytes"]))
+            writer.write(coerce_bytes(p["trailing_bytes"]))
         case "EPalMapObjectConcreteModelModuleType::RequireElementalAction":
             writer.fstring(p["unlock_item"])
-            writer.write(bytes(p["trailing_bytes"]))
+            writer.write(coerce_bytes(p["trailing_bytes"]))
 
     encoded_bytes = writer.bytes()
     return encoded_bytes
