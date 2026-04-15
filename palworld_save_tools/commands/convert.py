@@ -3,12 +3,11 @@
 import argparse
 import sys
 import time
-import json
 import os
 
 from loguru import logger
 from palworld_save_tools.gvas import GvasFile
-from palworld_save_tools.json_tools import CustomEncoder
+from palworld_save_tools import json_tools
 from palworld_save_tools.palsav import compress_gvas_to_sav, decompress_sav_to_gvas
 from palworld_save_tools.paltypes import (
     DISABLED_PROPERTIES,
@@ -172,11 +171,9 @@ def convert_sav_to_json(
     logger.info(f"GVAS file loaded in {gvas_parse_time - start_time:.2f} seconds")
     logger.info(f"Writing JSON to {output_path}")
     write_start_time = time.perf_counter()
-    with open(output_path, "w", encoding="utf8") as f:
-        indent = None if minify else "\t"
-        json.dump(
-            gvas_file.dump(), f, indent=indent, cls=CustomEncoder, allow_nan=allow_nan
-        )
+    json_tools.dump(
+        gvas_file.dump(), output_path, minify=minify, allow_nan=allow_nan
+    )
     write_end_time = time.perf_counter()
     logger.info(f"JSON written in {write_end_time - write_start_time:.2f} seconds")
     end_time = time.perf_counter()
@@ -191,8 +188,7 @@ def convert_json_to_sav(filename, output_path, force=False, zlib=False):
             if not confirm_prompt("Are you sure you want to continue?"):
                 exit(1)
     logger.info(f"Loading JSON from {filename}")
-    with open(filename, "r", encoding="utf8") as f:
-        data = json.load(f)
+    data = json_tools.load(filename)
     gvas_file = GvasFile.load(data)
     logger.info("Compressing SAV file")
     if (
