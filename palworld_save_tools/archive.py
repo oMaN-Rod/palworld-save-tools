@@ -780,8 +780,10 @@ class FArchiveWriter:
     def write(self, data: _bytes):
         self.data.write(data)
 
+    _pack_bool = struct.Struct("?").pack
+
     def bool(self, bool: bool):
-        self.data.write(struct.pack("?", bool))
+        self.data.write(FArchiveWriter._pack_bool(bool))
 
     def fstring(self, string: str) -> int:
         start = self.data.tell()
@@ -800,39 +802,57 @@ class FArchiveWriter:
             self.data.write(b"\x00\x00")
         return self.data.tell() - start
 
+    _pack_i16 = struct.Struct("h").pack
+
     def i16(self, i: int):
-        self.data.write(struct.pack("h", i))
+        self.data.write(FArchiveWriter._pack_i16(i))
+
+    _pack_u16 = struct.Struct("H").pack
 
     def u16(self, i: int):
-        self.data.write(struct.pack("H", i))
+        self.data.write(FArchiveWriter._pack_u16(i))
+
+    _pack_i32 = struct.Struct("i").pack
 
     def i32(self, i: int):
-        self.data.write(struct.pack("i", i))
+        self.data.write(FArchiveWriter._pack_i32(i))
+
+    _pack_u32 = struct.Struct("I").pack
 
     def u32(self, i: int):
-        self.data.write(struct.pack("I", i))
+        self.data.write(FArchiveWriter._pack_u32(i))
+
+    _pack_i64 = struct.Struct("q").pack
 
     def i64(self, i: int):
-        self.data.write(struct.pack("q", i))
+        self.data.write(FArchiveWriter._pack_i64(i))
+
+    _pack_u64 = struct.Struct("Q").pack
 
     def u64(self, i: int):
-        self.data.write(struct.pack("Q", i))
+        self.data.write(FArchiveWriter._pack_u64(i))
+
+    _pack_float = struct.Struct("f").pack
 
     def float(self, i: Optional[float]):
         if i is None:
             i = float("nan")
-        self.data.write(struct.pack("f", i))
+        self.data.write(FArchiveWriter._pack_float(i))
+
+    _pack_double = struct.Struct("d").pack
 
     def double(self, i: Optional[_float]):
         if i is None:
             i = float("nan")
-        self.data.write(struct.pack("d", i))
+        self.data.write(FArchiveWriter._pack_double(i))
+
+    _pack_byte = struct.Struct("B").pack
 
     def byte(self, b: int):
-        self.data.write(bytes([b]))
+        self.data.write(FArchiveWriter._pack_byte(b))
 
     def u(self, b: int):
-        self.data.write(struct.pack("B", b))
+        self.data.write(FArchiveWriter._pack_byte(b))
 
     def guid(self, u: Union[str, uuid.UUID, UUID]):
         uuid_writer(self, u)
