@@ -39,7 +39,7 @@ def decode(
 def decode_bytes(
     parent_reader: FArchiveReader, group_bytes: Sequence[int], group_type: str
 ) -> dict[str, Any]:
-    reader = parent_reader.internal_copy(bytes(group_bytes), debug=False)
+    reader = parent_reader.internal_copy(coerce_bytes(group_bytes), debug=False)
     group_data = {
         "group_type": group_type,
         "group_id": reader.guid(),
@@ -103,7 +103,7 @@ def encode(
             continue
         p = group["value"]["RawData"]["value"]
         encoded_bytes = encode_bytes(p)
-        group["value"]["RawData"]["value"] = {"values": [b for b in encoded_bytes]}
+        group["value"]["RawData"]["value"] = {"values": encoded_bytes}
     return writer.property_inner(property_type, properties)
 
 
@@ -119,23 +119,23 @@ def encode_bytes(p: dict[str, Any]) -> bytes:
     ]:
         writer.byte(p["org_type"])
     if p["group_type"] == "EPalGroupType::Organization":
-        writer.write(bytes(p["trailing_bytes"]))
+        writer.write(coerce_bytes(p["trailing_bytes"]))
     if p["group_type"] == "EPalGroupType::IndependentGuild":
         writer.guid(p["player_uid"])
         writer.fstring(p["guild_name_2"])
         writer.i64(p["player_info"]["last_online_real_time"])
         writer.fstring(p["player_info"]["player_name"])
     if p["group_type"] == "EPalGroupType::Guild":
-        writer.write(bytes(p["leading_bytes"]))
+        writer.write(coerce_bytes(p["leading_bytes"]))
         writer.tarray(uuid_writer, p["base_ids"])
         writer.i32(p["unknown_1"])
         writer.i32(p["base_camp_level"])
         writer.tarray(uuid_writer, p["map_object_instance_ids_base_camp_points"])
         writer.fstring(p["guild_name"])
         writer.guid(p["last_guild_name_modifier_player_uid"])
-        writer.write(bytes(p["unknown_2"]))
+        writer.write(coerce_bytes(p["unknown_2"]))
         writer.guid(p["admin_player_uid"])
         writer.tarray(player_info_writer, p["players"])
-        writer.write(bytes(p["trailing_bytes"]))
+        writer.write(coerce_bytes(p["trailing_bytes"]))
     encoded_bytes = writer.bytes()
     return encoded_bytes
